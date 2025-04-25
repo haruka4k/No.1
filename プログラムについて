@@ -1,1 +1,57 @@
-print("Hello from the Collatz structure!")
+# 定義：操作ルールに従って次の数を生成する関数
+def transform(n):
+    results = set()
+    if n % 6 != 4:
+        return results  # 6n+4型でないものは無視
+
+    # nを元の6n+4から逆算する
+    base_n = (n - 4) // 6
+
+    # ルール1: n ≡ 2 mod 3 かつ n > 0
+    if base_n > 0 and base_n % 3 == 2:
+        results.add(4 * base_n + 2)
+
+    # ルール2: n ≡ 0 mod 3 かつ n > 0
+    if base_n > 0 and base_n % 3 == 0:
+        results.add(8 * base_n + 4)
+
+    # ルール3: すべてのnに対して
+    results.add(4 * n)
+
+    return results
+
+# 世代生成関数
+def generate_generations(limit):
+    generations = []
+    current_generation = {4}
+    seen = set(current_generation)
+
+    while current_generation:
+        next_generation = set()
+        for num in current_generation:
+            for transformed in transform(num):
+                if transformed < limit and transformed not in seen:
+                    next_generation.add(transformed)
+                    seen.add(transformed)
+        generations.append(sorted(current_generation))
+        current_generation = next_generation
+
+    return generations
+
+# 上限Mを設定
+M = 1000
+generations = generate_generations(M)
+
+# 最も深い世代に現れる6n+4型の初期値（最長系列の出発点）
+deepest_generation = generations[-1] if generations else []
+
+import pandas as pd
+import ace_tools as tools
+
+df = pd.DataFrame({
+    "世代": list(range(len(generations))),
+    "値": [", ".join(map(str, gen)) for gen in generations]
+})
+tools.display_dataframe_to_user(name="コラッツ構造生成結果", dataframe=df)
+
+deepest_generation
